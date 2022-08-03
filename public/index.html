@@ -2,65 +2,66 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acceso denegado</title>
-    <title>Google Signin</title>
-
-    <meta name="google-signin-client_id" content="324011031375-glu067j3m6hduui7o8l4t6ce60ujrqua.apps.googleusercontent.com">
-
+    <title>Google Sign-In</title>
 </head>
 <body>
-
-    <h1>Acceso Denegado</h1>
-
-    <h1>Google Signin</h1>
+    <h1>Google Sign-In</h1>
     <hr>
+   
+    <div id="g_id_onload"
+         data-client_id="324011031375-glu067j3m6hduui7o8l4t6ce60ujrqua.apps.googleusercontent.com"
+         data-auto_prompt="false"
+         data-callback="handleCredentialResponse">
+      </div>
+      <div class="g_id_signin"
+         data-type="standard"
+         data-size="large"
+         data-theme="outline"
+         data-text="sign_in_with"
+         data-shape="rectangular"
+         data-logo_alignment="left">
+      </div>
 
-    <div class="g-signin2" data-onsuccess="onSignIn"></div>
-
-
-    <script src="https://apis.google.com/js/platform.js" async defer></script>
-
-    <a href="#" onclick="signOut();">Sign out</a>
-
-    <script>
-
-        console.log(window.location.hostname.includes('localhost'))
-
-        var url = ( window.location.hostname.includes('localhost') )
-                    ? 'http://localhost:8080/api/auth/google'
-                    : 'https://restserver-curso-erpc.herokuapp.com/api/auth/google';
-
-
-        function onSignIn(googleUser) {
-
-            var profile = googleUser.getBasicProfile();
-            console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
-            console.log('Name: ' + profile.getName());
-            console.log('Image URL: ' + profile.getImageUrl());
-            console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
-
-            var id_token = googleUser.getAuthResponse().id_token;
-            const data = { id_token };
-
-            fetch( url, {
+      <button id="google_signout">Sign out</button>
+   
+      <script>
+        function handleCredentialResponse(response) {
+    
+            const body = { id_token: response.credential }
+            fetch('http://localhost:8080/api/auth/google', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify( data )
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
             })
-            .then( resp => resp.json() )
-            .then( data => console.log( 'Nuestro server', data ) )
-            .catch( console.log );
-
+            .then( r=> r.json() )
+            .then( resp =>{
+                console.log(resp )
+                localStorage.setItem('email', resp.usuario.correo )
+            })
+            .catch( console.warn )
         }
-
-        function signOut() {
-            var auth2 = gapi.auth2.getAuthInstance();
-            auth2.signOut().then(function () {
-            console.log('User signed out.');
+    
+    
+        const button = document.getElementById('g_id_signout');
+        button.onclick = async() => {
+    
+            console.log(google.accounts.id)
+            google.accounts.id.disableAutoSelect()
+            google.accounts.id.revoke(localStorage.getItem('email'), done => {
+                console.log('consent revoked');
+                localStorage.clear()
+                location.reload()
             });
         }
-    </script>
-
-</body>
-</html>
+    
+    
+        </script>
+    
+    
+        <script src="https://accounts.google.com/gsi/client" async defer></script>
+    </body>
+    </html>
